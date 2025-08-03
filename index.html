@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share Your Experience</title>
+    <style>
+        /* --- Google Font --- */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        /* --- Basic Styles --- */
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+
+        /* --- Main Card Styling (Responsive) --- */
+        .review-card {
+            background-color: #ffffff;
+            padding: 1.5rem; /* Better padding for mobile */
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+            transition: all 0.3s ease;
+        }
+
+        .review-card h2 {
+            margin-top: 0;
+            color: #1c1e21;
+            font-weight: 700;
+            font-size: 1.5rem; /* Responsive font size */
+        }
+
+        .review-card p {
+            color: #606770;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        
+        .content-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* --- Star Rating Styling --- */
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .star {
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .star-path {
+            fill: #ccc;
+            transition: fill 0.2s ease;
+        }
+        
+        .stars:hover .star-path { fill: #ffb400; }
+        .star:hover ~ .star .star-path { fill: #ccc; }
+
+        /* --- Feedback Form --- */
+        .feedback-textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .feedback-textarea:focus { outline: none; border-color: #1877F2; }
+
+        /* --- Button Styling --- */
+        .btn-blue {
+            background-color: #1877F2;
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+            width: 100%;
+        }
+
+        .btn-blue:hover { background-color: #166fe5; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+        
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 1.5rem;
+        }
+
+        /* --- Modal (Pop-up) Styling (Responsive) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            padding: 1.5rem; /* Better padding for mobile */
+            border-radius: 15px;
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+            animation: fadeIn 0.4s ease;
+        }
+        .modal-content h3 { font-size: 1.4rem; }
+
+        #review-text-container {
+            position: relative; /* Needed for positioning the refresh icon */
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            color: #333;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+        
+        /* NEW: Refresh Icon Styling */
+        #refresh-review-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+        #refresh-review-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #888;
+            transition: transform 0.3s ease, fill 0.3s ease;
+        }
+        #refresh-review-btn:hover svg {
+            fill: #1877F2;
+            transform: rotate(90deg);
+        }
+
+        /* Media queries for larger screens */
+        @media (min-width: 480px) {
+            .review-card, .modal-content { padding: 2rem; }
+            .review-card h2 { font-size: 1.7rem; }
+            .modal-content h3 { font-size: 1.6rem; }
+            .modal-buttons { flex-direction: row; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="review-card" id="main-card">
+        <div id="initial-state">
+             <h2>How was your experience?</h2>
+            <p>Your feedback is important to us. Please rate your experience below.</p>
+            <div class="stars">
+                <svg class="star" onclick="handleStarClick(1)" viewBox="0 0 24 24"><path class="star-path" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="handleStarClick(2)" viewBox="0 0 24 24"><path class="star-path" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="handleStarClick(3)" viewBox="0 0 24 24"><path class="star-path" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="handleStarClick(4)" viewBox="0 0 24 24"><path class="star-path" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star" onclick="handleStarClick(5)" viewBox="0 0 24 24"><path class="star-path" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="five-star-modal">
+        <div class="modal-content">
+            <h3>Thank you for the great rating!</h3>
+            <p>Pick a review you like, copy it, and then proceed to Google to paste it.</p>
+            <div id="review-text-container">
+                <!-- Refresh Button -->
+                <button id="refresh-review-btn" onclick="generateNewReview()" title="Get a new review">
+                    <svg viewBox="0 0 24 24"><path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z" /></svg>
+                </button>
+                <p id="review-text"></p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button id="copy-review-btn" class="btn-blue" onclick="copyReview()">Copy Review</button>
+                <button id="proceed-btn" class="btn-blue" onclick="proceedToGoogle()">Proceed to Google</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let userRating = 0;
+    const mainCard = document.getElementById('main-card');
+    const modal = document.getElementById('five-star-modal');
+    const googleReviewURL = "https://g.page/r/CWeDbJFVA_Q7EBM/review";
+    const whatsappNumber = "919135684363";
+
+    const reviews = [
+        // DigiSatyam Themed Reviews
+        "I was lost looking for a genuine CAD class. DigiSatyam helped me find this institute, and it saved me so much time. My investment was worth it because of the amazing support.",
+        "Thanks to DigiSatyam, I found a class where my investment in learning feels secure. The handholding support here is real, not just a promise.",
+        "DigiSatyam ne sahi class dhoondne me bahut help ki. Mera time aur paisa dono bach gaya. Yahan ka support system best hai.",
+        "Before this, I was confused. DigiSatyam pointed me here, and I'm glad. Proper support milta hai aur lagta hai ki learning pe investment sahi jagah hua.",
+        "Finding a trustworthy class is hard. DigiSatyam helped me find this gem. They provide excellent support and my time was saved.",
+        "डिजिसत्यम की मदद से मुझे यह वास्तविक क्लास मिली। मेरा समय बच गया और सीखने में किया गया निवेश सही साबित हुआ क्योंकि यहाँ से उचित समर्थन मिलता है।",
+        "It's rare to find a class that delivers what it promises. DigiSatyam's recommendation was spot on. My investment has paid off thanks to the personal support.",
+        "I almost gave up on finding a good Rhino class. DigiSatyam's guidance led me here, and it's been a great journey. My investment in skills finally feels right.",
+        "DigiSatyam ki wajah se ek genuine class mili. Yahan sikhane pe itna focus hai ki lagta hai time waste nahi hua. Proper support ke liye thanks.",
+        "This institute is a great find, all thanks to DigiSatyam. They helped me invest my money and time in the right place for learning CAD with real support.",
+
+        // Original Reviews
+        "The 12 years of experience the trainer has is evident in every class. Highly recommend for anyone serious about CAD design.",
+        "Fantastic handholding support! I felt confident using Rhino and Matrix within weeks. The friendly teachers make a huge difference.",
+        "A truly professional environment for learning jewellery design. The advanced trainer is patient and incredibly knowledgeable.",
+        "Worth every penny. The course structure is perfect and the focus on practical skills is exactly what I needed.",
+        "I was a complete beginner, but the friendly approach and detailed classes helped me learn quickly. Great place!",
+        "The support for Matrix software is unparalleled. The friendly teacher is always there to help.",
+        "From basics to advanced, everything is covered perfectly. The handholding support is the best part.",
+        "Friendly teachers, great support, and deep knowledge of Rhino and Matrix. What else do you need?",
+        "Best classes for jewellery designing, no doubt. Trainer ka sikhane ka style ekdam perfect hai.",
+        "Rhino aur Matrix software itna easy lagega socha nahi tha. Sab credit friendly teachers ko jaata hai.",
+        "Agar CAD mein career banana hai, toh this is the place. Handholding support best hai inka.",
+        "12 saal ka experience bolta hai. Trainer sir is just amazing. Bahut kuch naya seekha.",
+        "Ek ek student pe dhyaan dete hain. Friendly atmosphere hai, isliye questions puchne me hesitation nahi hoti.",
+        "आभूषण डिजाइनिंग सीखने के लिए यह एक बेहतरीन संस्थान है। शिक्षक बहुत अनुभवी और सहायक हैं।",
+        "यहाँ राइनो और मैट्रिक्स पर बहुत अच्छी ट्रेनिंग दी जाती है। मुझे व्यक्तिगत रूप से बहुत मदद मिली।",
+        "प्रशिक्षक का 12 साल का अनुभव हमारे लिए बहुत फायदेमंद साबित हुआ। हर कॉन्सेप्ट को बहुत आसानी से समझाते हैं।",
+        "एडवांस ट्रेनर के साथ हैंडहोल्डिंग सपोर्ट ने सॉफ्टवेयर सीखना बहुत सरल बना दिया। धन्यवाद!",
+        "ज्वेलरी डिझायनिंगसाठी सर्वोत्तम क्लास! प्रशिक्षकांना १२ वर्षांचा अनुभव आहे आणि ते खूप छान शिकवतात.",
+        "येथे मला खूप चांगला सपोर्ट मिळाला. Rhino आणि Matrix सॉफ्टवेअर शिकायला खूप मजा आली.",
+        "शिक्षकांची शिकवण्याची पद्धत अप्रतिम आहे. प्रत्येक विद्यार्थ्याकडे वैयक्तिक लक्ष दिले जाते.",
+        "मी या कोर्सबद्दल खूप समाधानी आहे. मैत्रीपूर्ण वातावरणामुळे शिकणे सोपे होते.",
+        "CAD डिझायनिंग मध्ये करिअर करू इच्छिणाऱ्यांसाठी ही एक उत्तम संधी आहे. नक्की जॉईन करा."
+    ];
+
+    function handleStarClick(rating) {
+        userRating = rating;
+        if (rating === 5) {
+            generateNewReview(); // Generate the first review
+            modal.style.display = 'flex';
+        } else {
+            showFeedbackForm();
+        }
+    }
+    
+    function showFeedbackForm() {
+        mainCard.innerHTML = `
+            <div class="content-fade-in">
+                <h2>We're Sorry to Hear That!</h2>
+                <p>Please share your Honest feedback and how can I Improve our Teaching Quality and Inviroment..</p>
+                <textarea id="feedback-box" class="feedback-textarea" placeholder="Write your feedback here..."></textarea>
+                <button class="btn-blue" onclick="sendWhatsAppFeedback()">Submit Feedback</button>
+            </div>
+        `;
+    }
+
+    function sendWhatsAppFeedback() {
+        const feedbackText = document.getElementById('feedback-box').value;
+        if (feedbackText.trim() === '') {
+            alert('Please write your feedback before sending.');
+            return;
+        }
+        const message = `New Feedback (Rated ${userRating} ★):\n\n${feedbackText}`;
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+        window.location.href = whatsappURL;
+    }
+
+    // NEW: Function to generate and display a new review
+    function generateNewReview() {
+        const reviewTextElement = document.getElementById('review-text');
+        const copyButton = document.getElementById('copy-review-btn');
+        
+        const newReview = reviews[Math.floor(Math.random() * reviews.length)];
+        reviewTextElement.innerText = newReview;
+        
+        // Reset the copy button to its original state if it was clicked before
+        copyButton.innerText = "Copy Review";
+        copyButton.style.backgroundColor = '#1877F2'; // Reset to blue
+    }
+
+    function copyReview() {
+        const textToCopy = document.getElementById('review-text').innerText;
+        const copyButton = document.getElementById('copy-review-btn');
+        const fallbackCopy = (text) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyButton.innerText = "Copied!";
+                copyButton.style.backgroundColor = '#28a745';
+            } catch (err) {
+                copyButton.innerText = "Failed to Copy";
+            }
+            document.body.removeChild(textArea);
+        };
+        if (!navigator.clipboard) {
+            fallbackCopy(textToCopy);
+            return;
+        }
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            copyButton.innerText = "Copied!";
+            copyButton.style.backgroundColor = '#28a745';
+        }, () => {
+            fallbackCopy(textToCopy);
+        });
+    }
+
+    function proceedToGoogle() {
+        window.location.href = googleReviewURL;
+    }
+</script>
+
+</body>
+</html>
